@@ -1,0 +1,78 @@
+/*=============================================================================
+	DeferredFacadeLightPixelShader.usf
+	//JOHNGAMECODER_BEGIN //Facade-Light
+=============================================================================*/
+
+
+#define SUPPORT_CONTACT_SHADOWS 1
+#ifndef SUPPORT_CONTACT_SHADOWS
+	#define SUPPORT_CONTACT_SHADOWS 0
+#endif
+
+#define LIGHT_SOURCE_SHAPE 0
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/DeferredShadingCommon.ush"
+#include "/Engine/Private/DeferredLightingCommon.ush"
+
+#undef SUPPORT_CONTACT_SHADOWS
+
+
+FDeferredLightData SetupLightDataForStandardDeferred()
+{
+	// Build the light data struct using the DeferredLightUniforms and light defines
+	// We are heavily relying on the shader compiler to optimize out constant subexpressions in GetDynamicLighting()
+    FDeferredLightData LightData;
+    LightData.Position = DeferredLightUniforms.Position;
+    LightData.InvRadius = DeferredLightUniforms.InvRadius;
+    LightData.Color = DeferredLightUniforms.Color;
+    LightData.FalloffExponent = DeferredLightUniforms.FalloffExponent;
+    LightData.Direction = DeferredLightUniforms.Direction;
+    LightData.Tangent = DeferredLightUniforms.Tangent;
+    LightData.SpotAngles = DeferredLightUniforms.SpotAngles;
+    LightData.SourceRadius = DeferredLightUniforms.SourceRadius;
+    LightData.SourceLength = DeferredLightUniforms.SourceLength;
+
+    LightData.SoftSourceRadius = DeferredLightUniforms.SoftSourceRadius;
+    LightData.SpecularScale = DeferredLightUniforms.SpecularScale;
+    LightData.ContactShadowLength = abs(DeferredLightUniforms.ContactShadowLength);
+    LightData.ContactShadowLengthInWS = DeferredLightUniforms.ContactShadowLength < 0.0f;
+    LightData.DistanceFadeMAD = DeferredLightUniforms.DistanceFadeMAD;
+    LightData.ShadowMapChannelMask = DeferredLightUniforms.ShadowMapChannelMask;
+    LightData.ShadowedBits = DeferredLightUniforms.ShadowedBits;
+
+    LightData.bInverseSquared = false;
+    LightData.bRadialLight = false;
+	//@todo - permutation opportunity
+    LightData.bSpotLight = false;
+    LightData.bRectLight = false;
+
+    return LightData;
+}
+
+
+void DeferredLightPixelMain(
+	float2 ScreenUV : TEXCOORD0,
+	float3 ScreenVector : TEXCOORD1,
+	float4 SVPos : SV_POSITION,
+	out float4 OutColor : SV_Target0
+)
+{
+    float3 CameraVector = normalize(ScreenVector);
+
+    FScreenSpaceData ScreenSpaceData = GetScreenSpaceData(ScreenUV);
+    clip(ScreenSpaceData.GBuffer.FacadeMask - 0.5); // clip non-facade
+
+	// Only light pixels marked as using deferred shading
+	{
+        float SceneDepth = CalcSceneDepth(ScreenUV);
+        float3 WorldPosition = ScreenVector * SceneDepth + View.WorldCameraOrigin;
+
+        FDeferredLightData LightData = SetupLightDataForStandardDeferred();
+
+        float Dither = InterleavedGradientNoise(SVPos.xy, View.StateFrameIndexMod8);
+        FRectTexture RectTexture = InitRectTexture(DeferredLightUniforms.SourceTexture);
+        OutColor = GetDynamicLighting(WorldPosition, CameraVector, ScreenSpaceData.GBuffer, ScreenSpaceData.AmbientOcclusion, ScreenSpaceData.GBuffer.ShadingModelID, LightData, GetPerPixelLightAttenuation(ScreenUV), Dither, uint2(SVPos.xy), RectTexture);
+        OutColor *= ComputeLightProfileMultiplier(WorldPosition, DeferredLightUniforms.Position, -DeferredLightUniforms.Direction, DeferredLightUniforms.Tangent);
+	}
+}

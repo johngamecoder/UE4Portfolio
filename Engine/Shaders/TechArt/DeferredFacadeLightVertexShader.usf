@@ -1,0 +1,26 @@
+/*=============================================================================
+	DeferredFacadeLightVertexShader.usf
+	//JOHNGAMECODER_BEGIN //Facade-Light
+=============================================================================*/
+
+#include "/Engine/Private/Common.ush"
+
+float4 StencilingGeometryPosAndScale;
+float4 StencilingConeParameters; // .x NumSides (0 if not cone), .y NumSlices, .z CosAngle, .w ConeSphereRadius
+float4x4 StencilingConeTransform;
+float3 StencilingPreViewTranslation;
+
+//
+// Vertex shader for rendering a directional light using a full screen quad.
+//
+void DirectionalVertexMain(
+	in float2 InPosition : ATTRIBUTE0,
+	in float2 InUV : ATTRIBUTE1,
+	out float2 OutTexCoord : TEXCOORD0,
+	out float3 OutScreenVector : TEXCOORD1,
+	out float4 OutPosition : SV_POSITION
+)
+{
+    DrawRectangle(float4(InPosition.xy, 0, 1), InUV, OutPosition, OutTexCoord);
+    OutScreenVector = mul(float4(OutPosition.xy, 1, 0), View.ScreenToTranslatedWorld).xyz;
+}
