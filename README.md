@@ -1,9 +1,9 @@
 # JohnGameCoder's Unreal Engine 4 Portfolio
 
 ## 1. Facade Lighting
-![UE4 Portfolio Facade lighting](https://user-images.githubusercontent.com/35551084/163378063-5b04d3f2-cd07-4c9e-9208-e5b3684935ec.jpg)
+![1](https://user-images.githubusercontent.com/35551084/164440666-f0a5566d-2ffb-4e7f-bdad-6775d4062c75.JPG)
 * Youtube : https://youtu.be/Tgw9y33gITo 
 
 ## 2. Material Expression Fit
-![UE4 Portfolio Material Expression Fit](https://user-images.githubusercontent.com/35551084/163378160-94b20f69-448f-4a68-bb33-c88a79ff13ab.jpg)
+![2](https://user-images.githubusercontent.com/35551084/164440707-4c48c3e9-82b6-4ee6-be09-3d9637e11f7f.JPG)
 * Youtube : https://youtu.be/V-47062dBhE  
